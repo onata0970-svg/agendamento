@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA GESTÃO PRO | Natanjkl</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --secondary: #10b981; --dark: #1e293b; --light: #f8fafc; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Poppins', sans-serif; background: var(--light); margin: 0; padding: 10px; color: var(--dark); font-size: 16px; }
+        
+        /* Ajuste para inputs no mobile não darem zoom */
+        input, select, textarea { font-size: 16px !important; width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 12px; font-family: inherit; }
+        
+        .container { max-width: 600px; margin: auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        
+        h2, h3 { color: var(--primary); margin-top: 0; text-align: center; }
+        label { display: block; font-size: 0.85em; font-weight: 600; margin-bottom: 5px; color: #475569; }
+        
+        .btn { padding: 15px 20px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; display: inline-block; text-align: center; width: 100%; touch-action: manipulation; }
+        .btn-confirm { background: var(--secondary); color: white; font-size: 1.1em; }
+        .btn-main { background: var(--primary); color: white; }
+        
+        .comprovante { background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%); border: 2px dashed var(--secondary); border-radius: 15px; padding: 20px; position: relative; color: #333; }
+        .recibo-item { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding: 10px 0; font-size: 0.9em; }
+
+        .hidden { display: none; }
+        .no-print { display: block; }
+        
+        /* Tabs Mobile-Friendly */
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 15px; overflow-x: auto; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab { flex: 1; text-align: center; padding: 12px 15px; cursor: pointer; border-radius: 10px; font-size: 0.8em; white-space: nowrap; transition: 0.2s; }
+        .tab.active { background: white; color: var(--primary); font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+
+        /* Grade de Itens Ajustada para Celular */
+        .item-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr 45px; gap: 5px; margin-bottom: 10px; align-items: center; }
+        .item-row input { margin-bottom: 0; padding: 8px; }
+
+        @media print { .no-print { display: none !important; } #area-impressao { display: block !important; } }
+    </style>
+</head>
+<body>
+
+<div class="container no-print">
+
+    <div id="view-cliente" class="card">
+        <h2 id="topo-nome-empresa">Sua Empresa</h2>
+        <div id="form-cliente">
+            <label>Nome / Empresa</label>
+            <input type="text" id="c-nome" placeholder="Seu nome">
+            <label>WhatsApp</label>
+            <input type="tel" id="c-tel" placeholder="(00) 00000-0000">
+            <label>CNPJ / CPF</label>
+            <input type="text" id="c-cnpj" placeholder="00.000.000/0001-00">
+            <label>Endereço</label>
+            <input type="text" id="c-end" placeholder="Rua, Bairro, Cidade">
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;"><label>Data</label><input type="date" id="c-data"></div>
+                <div style="flex: 1;"><label>Hora</label><input type="time" id="c-hora"></div>
+            </div>
+            <label>O que você precisa?</label>
+            <textarea id="c-msg" rows="3"></textarea>
+            <button class="btn btn-confirm" onclick="enviarAgendamento()">📅 Solicitar Orçamento</button>
+            <button class="btn" style="background:none; color:#94a3b8; margin-top:10px" onclick="irPara('view-login')">Painel Administrativo</button>
+        </div>
+
+        <div id="resumo-cliente" class="hidden">
+            <div class="comprovante" id="card-print">
+                <h3 style="margin-bottom:5px; color:var(--secondary)">Solicitação Confirmada!</h3>
+                <p style="text-align:center; font-size:0.7em; margin-bottom:15px; color:gray">Protocolo: <span id="rec-prot">#0000</span></p>
+                <div class="recibo-item"><span>Cliente:</span><strong id="rec-nome"></strong></div>
+                <div class="recibo-item"><span>Data:</span><strong id="rec-data"></strong></div>
+                <div class="recibo-item"><span>Hora:</span><strong id="rec-hora"></strong></div>
+                <div class="recibo-item"><span>Local:</span><strong id="rec-end"></strong></div>
+                <p style="font-size:0.75em; color:#64748b; margin-top:15px; text-align:center;">Tire um <strong>Print</strong> desta tela. <br>Já enviamos para o nosso WhatsApp.</p>
+            </div>
+            <button class="btn btn-main" style="margin-top:20px" onclick="location.reload()">Novo Agendamento</button>
+        </div>
+    </div>
+
+    <div id="view-login" class="card hidden">
+        <h3>Acesso Natanjkl</h3>
+        <input type="password" id="l-pass" placeholder="Sua senha">
+        <button class="btn btn-main" onclick="login()">Entrar</button>
+        <button class="btn" style="background:none; color:gray" onclick="irPara('view-cliente')">Voltar</button>
+    </div>
+
+    <div id="view-admin" class="card hidden">
+        <div class="tabs">
+            <div id="t1" class="tab active" onclick="tab(1)">Pedidos</div>
+            <div id="t2" class="tab" onclick="tab(2)">Orçamento</div>
+            <div id="t3" class="tab" onclick="tab(3)">Catálogo</div>
+            <div id="t4" class="tab" onclick="tab(4)">Empresa</div>
+            <div class="tab" style="color:red" onclick="location.reload()">Sair</div>
+        </div>
+        
+        <div id="tab-1"><div id="lista-agendamentos">Carregando...</div></div>
+        
+        <div id="tab-2" class="hidden">
+            <input type="text" id="o-nome" placeholder="Cliente">
+            <input type="text" id="o-cnpj" placeholder="CNPJ">
+            <div id="itens-orc"></div>
+            <button class="btn" style="background:#eee; color:#333; margin-top:10px" onclick="addLinha()">+ Item</button>
+            <div id="total-geral" style="text-align:right; font-weight:bold; margin:15px 0; font-size:1.2em">Total: R$ 0,00</div>
+            <button class="btn btn-confirm" onclick="prepararPDF()">Gerar PDF / Imprimir</button>
+        </div>
+
+        <div id="tab-3" class="hidden">
+            <input type="text" id="cat-n" placeholder="Nome do Serviço">
+            <input type="number" id="cat-p" placeholder="Preço R$">
+            <button class="btn btn-main" onclick="salvarCat()">Salvar no Catálogo</button>
+            <div id="tab-cat-corpo" style="margin-top:20px; border-top:1px solid #eee; padding-top:10px"></div>
+        </div>
+
+        <div id="tab-4" class="hidden">
+            <label>Minha Empresa</label>
+            <input type="text" id="m-nome" oninput="salvarDados()">
+            <label>WhatsApp Recebimento</label>
+            <input type="tel" id="m-tel" oninput="salvarDados()">
+            <label>Meu CNPJ</label>
+            <input type="text" id="m-cnpj" oninput="salvarDados()">
+            
+            <hr style="margin:20px 0; border:1px solid #eee">
+            <label>Backup e Segurança</label>
+            <button class="btn" style="background:#475569; color:white; margin-bottom:10px" onclick="baixarBackupJSON()">📥 Salvar Backup (JSON)</button>
+            <button class="btn" style="background:#10b981; color:white" onclick="baixarCatalogoCSV()">📊 Exportar Tabela (Excel)</button>
+        </div>
+    </div>
+</div>
+
+<div id="area-impressao" class="hidden" style="background:white; padding:20px;">
+    <h1 id="p-m-nome"></h1>
+    <hr>
+    <p>Orçamento para: <strong id="p-o-nome"></strong></p>
+    <div id="p-tabela"></div>
+    <h2 id="p-total" style="text-align:right"></h2>
+    <div class="no-print">
+        <button class="btn btn-main" onclick="window.print()">Confirmar Impressão / PDF</button>
+        <button class="btn" style="margin-top:10px; background:#ddd" onclick="location.reload()">Voltar</button>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "COLE_AQUI_SEU_LINK_DO_GOOGLE";
+    let db_cat = JSON.parse(localStorage.getItem('n_cat')) || [];
+    let db_meu = JSON.parse(localStorage.getItem('n_meu')) || {nome:'Minha Empresa', cnpj:'', tel:''};
+
+    window.onload = () => {
+        document.getElementById('topo-nome-empresa').innerText = db_meu.nome;
+        document.getElementById('m-nome').value = db_meu.nome;
+        document.getElementById('m-tel').value = db_meu.tel;
+        document.getElementById('m-cnpj').value = db_meu.cnpj;
+        renderCat();
+    };
+
+    function irPara(id) {
+        ['view-cliente','view-login','view-admin'].forEach(v => document.getElementById(v).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function tab(n) {
+        [1,2,3,4].forEach(i => {
+            document.getElementById('tab-'+i).classList.toggle('hidden', i!==n);
+            document.getElementById('t'+i).classList.toggle('active', i===n);
+        });
+        if(n === 1) carregarPedidos();
+    }
+
+    function login() {
+        if(document.getElementById('l-pass').value === "admin123") { irPara('view-admin'); tab(1); }
+        else alert("Senha incorreta");
+    }
+
+    function salvarDados() {
+        db_meu = { nome: document.getElementById('m-nome').value, tel: document.getElementById('m-tel').value, cnpj: document.getElementById('m-cnpj').value };
+        localStorage.setItem('n_meu', JSON.stringify(db_meu));
+        document.getElementById('topo-nome-empresa').innerText = db_meu.nome;
+    }
+
+    async function enviarAgendamento() {
+        const d = {
+            nome: document.getElementById('c-nome').value,
+            tel: document.getElementById('c-tel').value,
+            cnpj: document.getElementById('c-cnpj').value,
+            end: document.getElementById('c-end').value,
+            dia: document.getElementById('c-data').value,
+            hora: document.getElementById('c-hora').value,
+            msg: document.getElementById('c-msg').value
+        };
+
+        if(!d.nome || !d.tel) return alert("Preencha nome e WhatsApp!");
+
+        document.getElementById('form-cliente').classList.add('hidden');
+        document.getElementById('resumo-cliente').classList.remove('hidden');
+        document.getElementById('rec-prot').innerText = "#" + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('rec-nome').innerText = d.nome;
+        document.getElementById('rec-data').innerText = d.dia.split('-').reverse().join('/');
+        document.getElementById('rec-hora').innerText = d.hora;
+        document.getElementById('rec-end').innerText = d.end;
+
+        const zapUrl = `https://wa.me/${db_meu.tel.replace(/\D/g,'')}?text=*NOVO AGENDAMENTO*%0ACliente: ${d.nome}%0AData: ${d.dia}%0AEndereço: ${d.end}`;
+        window.open(zapUrl, '_blank');
+
+        if(SCRIPT_URL !== "COLE_AQUI_SEU_LINK_DO_GOOGLE") {
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(d) });
+        }
+    }
+
+    async function carregarPedidos() {
+        if(SCRIPT_URL === "COLE_AQUI_SEU_LINK_DO_GOOGLE") {
+            document.getElementById('lista-agendamentos').innerHTML = "Configure o SCRIPT_URL para ver os pedidos.";
+            return;
+        }
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const data = await res.json();
+            const lista = document.getElementById('lista-agendamentos');
+            lista.innerHTML = "";
+            data.slice(1).reverse().forEach(r => {
+                lista.innerHTML += `<div style="padding:15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>${r[1]}</strong><br><small>${r[4] || ''} - ${r[5] || ''}</small></div>
+                    <button onclick="iniciarOrc('${r[1]}','${r[3]}')" style="padding:5px 10px; border-radius:5px; border:1px solid var(--primary); color:var(--primary); background:none">Orc.</button>
+                </div>`;
+            });
+        } catch(e) { document.getElementById('lista-agendamentos').innerHTML = "Erro ao carregar dados."; }
+    }
+
+    function iniciarOrc(nome, cnpj) {
+        document.getElementById('o-nome').value = nome;
+        document.getElementById('o-cnpj').value = cnpj;
+        tab(2);
+    }
+
+    function addLinha(n='', p='') {
+        const div = document.createElement('div'); div.className = 'item-row';
+        div.innerHTML = `<input type="text" value="${n}" class="in" placeholder="Item"> <input type="number" value="1" class="iq" oninput="calc()" placeholder="Qtd"> <input type="number" value="${p}" class="ip" oninput="calc()" placeholder="R$"> <button onclick="this.parentElement.remove();calc()" style="background:#fee2e2; color:#ef4444; border:none; border-radius:8px; height:40px">X</button>`;
+        document.getElementById('itens-orc').appendChild(div);
+        calc();
+    }
+
+    function calc() {
+        let total = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const q = row.querySelector('.iq').value || 0;
+            const p = row.querySelector('.ip').value || 0;
+            total += (q * p);
+        });
+        document.getElementById('total-geral').innerText = `Total: R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    }
+
+    function salvarCat() {
+        const n = document.getElementById('cat-n').value;
+        const p = document.getElementById('cat-p').value;
+        if(!n || !p) return alert("Preencha nome e preço");
+        db_cat.push({n, p});
+        localStorage.setItem('n_cat', JSON.stringify(db_cat));
+        document.getElementById('cat-n').value = '';
+        document.getElementById('cat-p').value = '';
+        renderCat();
+    }
+
+    function renderCat() {
+        const t = document.getElementById('tab-cat-corpo');
+        t.innerHTML = "";
+        db_cat.forEach((item, i) => {
+            t.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9;">
+                <span style="font-size:0.9em">${item.n} - <strong>R$ ${item.p}</strong></span>
+                <div>
+                    <button onclick="addLinha('${item.n}','${item.p}')" style="background:var(--secondary); color:white; border:none; padding:5px 10px; border-radius:5px; margin-right:5px">+</button>
+                    <button onclick="db_cat.splice(${i},1); localStorage.setItem('n_cat', JSON.stringify(db_cat)); renderCat();" style="background:#ddd; border:none; padding:5px 10px; border-radius:5px">X</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function prepararPDF() {
+        document.getElementById('p-m-nome').innerText = db_meu.nome;
+        document.getElementById('p-o-nome').innerText = document.getElementById('o-nome').value;
+        document.getElementById('p-total').innerText = document.getElementById('total-geral').innerText;
+        
+        let tabelaHtml = '<table style="width:100%; border-collapse:collapse; margin-top:20px">';
+        tabelaHtml += '<thead><tr style="background:#eee; text-align:left"><th>Item</th><th>Qtd</th><th>Unit</th><th>Total</th></tr></thead><tbody>';
+        
+        document.querySelectorAll('.item-row').forEach(row => {
+            const n = row.querySelector('.in').value;
+            const q = row.querySelector('.iq').value;
+            const p = row.querySelector('.ip').value;
+            const sub = (q * p).toLocaleString('pt-BR',{minimumFractionDigits:2});
+            tabelaHtml += `<tr style="border-bottom:1px solid #eee"><td>${n}</td><td>${q}</td><td>${p}</td><td>${sub}</td></tr>`;
+        });
+        tabelaHtml += '</tbody></table>';
+        
+        document.getElementById('p-tabela').innerHTML = tabelaHtml;
+        document.querySelector('.container').classList.add('hidden');
+        document.getElementById('area-impressao').classList.remove('hidden');
+    }
+
+    // BACKUP NO CELULAR/PC
+    function baixarBackupJSON() {
+        const dados = { catalogo: db_cat, config: db_meu, data_export: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `GESTAO_PRO_BACKUP.json`;
+        link.click();
+    }
+
+    function baixarCatalogoCSV() {
+        let csv = "Servico;Preco\n";
+        db_cat.forEach(item => { csv += `${item.n};${item.p}\n`; });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `CATALOGO.csv`;
+        link.click();
+    }
+</script>
+
+</body>
+</html>
